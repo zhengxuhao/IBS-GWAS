@@ -27,12 +27,13 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 
 
   In shell, type:
-> plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
->
-> grep PROBLEM raw-GWA-data.sexcheck > raw-GWA-data.sexprobs 
->
-> awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
 
+```
+plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
+grep PROBLEM raw-GWA-data.sexcheck > raw-GWA-data.sexprobs 
+awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
+```
+ 
  File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
 
 
@@ -44,10 +45,10 @@ In Plink format (PED, MAP or BED, BIM & FAM)
  * Individuals with outlying heterozygosity rate (__out of mean +/- 3 SD__)
 
  In shell, type:
-> plink --bfile raw-GWA-data --missing --out raw-GWA-data 
->
-> plink --bfile raw-GWA-data --het --out raw-GWA-data 
-
+```
+ plink --bfile raw-GWA-data --missing --out raw-GWA-data 
+ plink --bfile raw-GWA-data --het --out raw-GWA-data 
+```
  Then run rscript “QC_imiss_het.R” in R environment
 
  A graph **raw-GWA-data.imiss-vs-het.pdf** will be generated for checking missing calling rates and heterozygosity rate of all individuals.  
@@ -62,24 +63,30 @@ In Plink format (PED, MAP or BED, BIM & FAM)
  * Strong LD region will be excluded based on “high-LD-regions.txt”.
  
 In shell, type:
-> plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
+```
+ plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
+```
 
 **B. Generating IBS matrix**
 
  In shell, type:
-> plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
+```
+ plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
+```
 
  Then we will identify all pairs of individuals with IBS > 0.185 which outputs the ID of the individual from the pair with lowest call rate (the one with high call rate in a pair will be kept).  
 
  Note:  The expectation is that IBD = 1 for duplicates or monozygotic twins, IBD = 0.5 for first-degree relatives, IBD = 0.25 for second-degree relatives and IBD = 0.125 for third-degree relatives.  It is typical to remove one individual from each pair with an IBD value of > 0.1875, which is halfway between the expected IBD for third- and second-degree relatives.
 
  In shell, type:
-> perl run-IBD-QC.pl raw-GWA-data
+```
+ perl run-IBD-QC.pl raw-GWA-data
 
+```
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
 
 
-####4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package
+####4. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
 
 
 Note: Run EIGENSOFT using **LD-pruned binary files**
@@ -114,6 +121,7 @@ smartpca.perl \
 -s 6
 ```
 **Interpertation**:
+```
 -i example.geno  : genotype file in any format
 -a example.snp   : snp file in any format 
 -b example.ind   : indiv file in any format 
@@ -143,6 +151,8 @@ OPTIONAL FLAGS:
                    (Corresponds to qtmode parameter in smartpca program.)
                    The default value for this parameter is NO.
 
+```
+
 
 **C. (Optional) Plot top 2 PCs by *ploteig* function**
 
@@ -166,13 +176,16 @@ plotpig \
 -i raw-GWA-data_pop_strat.eval \
 -o GWA-data_pop_strat_twout
 ```
+
  Corrected only PCs with P values <0.05 
 
 **E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.**  
 
  **Optional** Run evec2pca function to tranfer *.evec* file to *.pca* (if .pca file was not generated in smartpca process)
 
- >evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data_pop_strat.ind raw-GWA-data_pop_strat.pca
+ ```
+ evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data_pop_strat.ind raw-GWA-data_pop_strat.pca
+ ```
 
  Then run smarteigenstrat program:
 
@@ -188,6 +201,8 @@ smarteigenstrat.perl \
 -l raw-GWA-data_pop_strat_cor.log
 ```
 **Interpretation**:
+
+```
 -i example.geno : genotype file in any format
 -a example.snp : snp file in any format 
 -b example.ind : individual file in any format
@@ -217,11 +232,13 @@ smarteigenstrat.perl \
     because Armitage uses NSAMPLES while we use NSAMPLES-1, which we
     consider to be appropriate.
 -l example.log : standard output file
-
+```
 
 **F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT**
 
-> gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
+```
+ gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
+```
 
  Check the lamda value before and after correction, then change QC number for correction to adjust.
 
