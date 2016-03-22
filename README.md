@@ -21,11 +21,11 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 ####1. Identification of individuals with discordant sex information
 
   In shell, type:
->plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
+> plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
 >
->grep PROBLEM raw-GWA-data.sexcheck > raw-GWA-data.sexprobs 
+> grep PROBLEM raw-GWA-data.sexcheck > raw-GWA-data.sexprobs 
 >
->awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
+> awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
 
  File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
 ####2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
@@ -36,9 +36,9 @@ In Plink format (PED, MAP or BED, BIM & FAM)
  * Individuals with outlying heterozygosity rate (__out of mean +/- 3 SD__)
 
  In shell, type:
->plink --bfile raw-GWA-data --missing --out raw-GWA-data 
+> plink --bfile raw-GWA-data --missing --out raw-GWA-data 
 >
->plink --bfile raw-GWA-data --het --out raw-GWA-data 
+> plink --bfile raw-GWA-data --het --out raw-GWA-data 
 
  Then run rscript “QC_imiss_het.R” in R environment
 
@@ -53,19 +53,19 @@ In Plink format (PED, MAP or BED, BIM & FAM)
  * Strong LD region will be excluded based on “high-LD-regions.txt”.
  
 In shell, type:
->plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
+> plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
 
 **B. Generating IBS matrix**
 
  In shell, type:
->plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
+> plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
 
  Then we will identify all pairs of individuals with IBS > 0.185 which outputs the ID of the individual from the pair with lowest call rate (the one with high call rate in a pair will be kept).  
 
  Note:  The expectation is that IBD = 1 for duplicates or monozygotic twins, IBD = 0.5 for first-degree relatives, IBD = 0.25 for second-degree relatives and IBD = 0.125 for third-degree relatives.  It is typical to remove one individual from each pair with an IBD value of > 0.1875, which is halfway between the expected IBD for third- and second-degree relatives.
 
  In shell, type:
->perl run-IBD-QC.pl raw-GWA-data
+> perl run-IBD-QC.pl raw-GWA-data
 
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
 
@@ -75,14 +75,14 @@ Note: Run EIGENSOFT using LD-pruned binary files
 EIGENSOFT (according to Nature protocol paprr)
 
 **A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF**
-'''
->convertf -p <(printf "genotypename: raw-GWA-data.bed
->snpname: raw-GWA-data.bim
->indivname: raw-GWA-data.fam
->outputformat: EIGENSTRAT
->genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
->snpoutname: raw-GWA-data_pop_strat.snp
->indivoutname: raw-GWA-data_pop_strat.ind")
+
+> convertf -p <(printf "genotypename: raw-GWA-data.bed
+> snpname: raw-GWA-data.bim
+> indivname: raw-GWA-data.fam
+> outputformat: EIGENSTRAT
+> genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
+> snpoutname: raw-GWA-data_pop_strat.snp
+> indivoutname: raw-GWA-data_pop_strat.ind")
 '''
 **B. Run SmartPCA to check population stratification by principal component analysis**
 
