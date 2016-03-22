@@ -20,7 +20,9 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 
   In shell, type:
 >plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
+>
 >grep PROBLEM raw-GWA-data.sexcheck > raw-GWA-data.sexprobs 
+>
 >awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
 
  File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
