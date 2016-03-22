@@ -3,16 +3,18 @@ GWAS on multinational IBS case-control cohorts, about creating standardized prot
 
 ##QUALITY CONTROL (QC) PROTOCOL FOR IBS GWAS DATA
 
-*Please note*: In this protocol, we are going to perform QC on a ‘per-individual’ basis before conducting QC on a ‘per-marker’ basis to maximize the number of markers remaining in the study (suggested by Nature Protocols. 2010, DOI: 10.1038/nprot.2010.116, PMID: 21085122)
+**Please note**: In this protocol, we are going to perform QC on a ‘per-individual’ basis before conducting QC on a ‘per-marker’ basis to maximize the number of markers remaining in the study (suggested by Nature Protocols. 2010, DOI: 10.1038/nprot.2010.116, PMID: 21085122)
 
 ####Data
 In Plink format (PED, MAP or BED, BIM & FAM)
 
 ####Tool used in this protocol:
 
-  *PLINK 1.9 (https://www.cog-genomics.org/plink2)
-  *SMARTPCA function in EIGENSOFT version 6.0.1 for running PCA (http://www.hsph.harvard.edu/alkes-price/software/)
-  *R: for statistical in data analysis and graphing (http://cran.r-project.org/)
+  * [PLINK 1.9](https://www.cog-genomics.org/plink2)
+  
+  * SMARTPCA function in [EIGENSOFT version 6.0.1](http://www.hsph.harvard.edu/alkes-price/software/) for running PCA 
+  
+  * [R](http://cran.r-project.org/): for statistical in data analysis and graphing 
 
 ###PART A: INDIVIDUAL SAMPLE QC
 
@@ -29,37 +31,45 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 
   2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
 
-We will remove
-•	Individuals with elevated missing data rates (missing>0,03) 
-•	Individuals with outlying heterozygosity rate (out of mean +/- 3 SD)
-In shell, type:
-plink --bfile raw-GWA-data --missing --out raw-GWA-data 
-plink --bfile raw-GWA-data --het --out raw-GWA-data 
-Then run rscript “QC_imiss_het.R” in R environment
+ We will remove
 
-A graph  “raw-GWA-data.imiss-vs-het.pdf” will be generated for checking missing calling rates and heterozygosity rate of all individuals.  
-A file “fail-imisshet-qc.txt” will be generated containing family IDs and individual IDs of all these individuals to remove.    
-3. Identification of duplicated or related individuals
+ *Individuals with elevated missing data rates (__missing>0,03__) 
+ *Individuals with outlying heterozygosity rate (__out of mean +/- 3 SD__)
 
-a.	Pruning data to reduce the number of markers to reduce computational complexity
+ In shell, type:
+>plink --bfile raw-GWA-data --missing --out raw-GWA-data 
+>
+>plink --bfile raw-GWA-data --het --out raw-GWA-data 
 
-•	Using a window of 50 variants and a shift of 5 variants between windows, with an r2 cut-off of 0.2:  
-•	Strong LD region will be excluded based on “high-LD-regions.txt”.
-In shell, type:
-plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
+ Then run rscript “QC_imiss_het.R” in R environment
 
-b.	Generating IBS matrix
+ A graph **raw-GWA-data.imiss-vs-het.pdf** will be generated for checking missing calling rates and heterozygosity rate of all individuals.  
+ A file **fail-imisshet-qc.txt** will be generated containing family IDs and individual IDs of all these individuals to remove.    
 
-In shell, type:
-plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
+ 3. Identification of duplicated or related individuals
 
-Then we will identify all pairs of individuals with IBS > 0.185 which outputs the ID of the individual from the pair with lowest call rate (the one with high call rate in a pair will be kept).  
-Note:  The expectation is that IBD = 1 for duplicates or monozygotic twins, IBD = 0.5 for first-degree relatives, IBD = 0.25 for second-degree relatives and IBD = 0.125 for third-degree relatives.  It is typical to remove one individual from each pair with an IBD value of > 0.1875, which is halfway between the expected IBD for third- and second-degree relatives.
-In shell, type:
-perl run-IBD-QC.pl raw-GWA-data
+####Pruning data to reduce the number of markers to reduce computational complexity
 
-A file “fail-IBD-QC.txt” will be generated to exclude these samples from downstream analyses.
-4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package (or flashpca?)
+ *Using a window of 50 variants and a shift of 5 variants between windows, with an r2 cut-off of 0.2:  
+ *Strong LD region will be excluded based on “high-LD-regions.txt”.
+ In shell, type:
+>plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
+
+####Generating IBS matrix
+
+ In shell, type:
+>plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
+
+ Then we will identify all pairs of individuals with IBS > 0.185 which outputs the ID of the individual from the pair with lowest call rate (the one with high call rate in a pair will be kept).  
+
+ Note:  The expectation is that IBD = 1 for duplicates or monozygotic twins, IBD = 0.5 for first-degree relatives, IBD = 0.25 for second-degree relatives and IBD = 0.125 for third-degree relatives.  It is typical to remove one individual from each pair with an IBD value of > 0.1875, which is halfway between the expected IBD for third- and second-degree relatives.
+
+ In shell, type:
+>perl run-IBD-QC.pl raw-GWA-data
+
+ A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
+
+ 4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package (or flashpca?)
 
 Note: Run EIGENSOFT using LD-pruned binary files
 EIGENSOFT (according to Nature protocol paprr)
