@@ -76,7 +76,7 @@ EIGENSOFT (according to Nature protocol paprr)
 
 **A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF**
 
-'''
+```
 convertf -p <(printf "genotypename: raw-GWA-data.bed
 snpname: raw-GWA-data.bim
 indivname: raw-GWA-data.fam
@@ -84,34 +84,24 @@ outputformat: EIGENSTRAT
 genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
 snpoutname: raw-GWA-data_pop_strat.snp
 indivoutname: raw-GWA-data_pop_strat.ind")
-'''
+```
 
 **B. Run SmartPCA to check population stratification by principal component analysis**
 
-
->smartpca.perl \
-
->-i raw-GWA-data_pop_strat.eigenstratgeno \
->
->-a raw-GWA-data_pop_strat.snp \
->
->-b raw-GWA-data_pop_strat.ind \
->
->-o raw-GWA-data_pop_strat.pca \
->
->-p raw-GWA-data_pop_strat.plot \
->
->-e raw-GWA-data_pop_strat.eval \
->
->-l raw-GWA-data_pop_strat.log \
->
->-m 0 \
->
->-t 100 \
->
->-k 100 \
->
->-s 6
+```
+smartpca.perl \
+-i raw-GWA-data_pop_strat.eigenstratgeno \
+-a raw-GWA-data_pop_strat.snp \
+-b raw-GWA-data_pop_strat.ind \
+-o raw-GWA-data_pop_strat.pca \
+-p raw-GWA-data_pop_strat.plot \
+-e raw-GWA-data_pop_strat.eval \
+-l raw-GWA-data_pop_strat.log \
+-m 0 \
+-t 100 \
+-k 100 \
+-s 6
+```
 
 **C. *(optional)* Plot top 2 PCs by ploteig function**
 
