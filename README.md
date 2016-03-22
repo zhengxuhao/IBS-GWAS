@@ -120,38 +120,7 @@ smartpca.perl \
 -k 100 \
 -s 6
 ```
-**Interpertation**:
-```
--i example.geno  : genotype file in any format
--a example.snp   : snp file in any format 
--b example.ind   : indiv file in any format 
--k k             : (Default is 10) number of principal components to output
--o example.pca   : output file of principal components.  Individuals removed
-                   as outliers will have all values set to 0.0 in this file.
--p example.plot  : prefix of output plot files of top 2 principal components.
-                   (labeling individuals according to labels in indiv file)
--e example.eval  : output file of all eigenvalues
--l example.log   : output logfile
--m maxiter       : (Default is 5) maximum number of outlier removal iterations.
-                   To turn off outlier removal, set -m 0.
--t topk          : (Default is 10) number of principal components along which 
-                   to remove outliers during each outlier removal iteration.
--s sigma         : (Default is 6.0) number of standard deviations which an
-                   individual must exceed, along one of topk top principal
-		   components, in order to be removed as an outlier.
-
-OPTIONAL FLAGS:
--w poplist       : compute eigenvectors using populations in poplist only,
-                   where poplist is an ASCII file with one population per line
--y plotlist      : output plot will include populations in plotlist only, 
-                   where plotlist is an ASCII file with one population per line
--z badsnpname    : list of SNPs which should be excluded from the analysis
--q YES/NO        : If set to YES, assume that there is a single population and
-                   the population field contains real-valued phenotypes.
-                   (Corresponds to qtmode parameter in smartpca program.)
-                   The default value for this parameter is NO.
-
-```
+  
 
 
 **C. (Optional) Plot top 2 PCs by *ploteig* function**
@@ -200,39 +169,8 @@ smarteigenstrat.perl \
 -o raw-GWA-data_pop_strat_cor.chisq \
 -l raw-GWA-data_pop_strat_cor.log
 ```
-**Interpretation**:
+   
 
-```
--i example.geno : genotype file in any format
--a example.snp : snp file in any format 
--b example.ind : individual file in any format
-  We note that phenotype information will be contained in example.ind,
-  either as Case/Control labels or quantitative phenotypes if -q set to YES.
--q YES/NO : If set to YES, use quantitative phenotypes in example.ind.
-  If -q is set to YES, the third column of the input individual file
-  in EIGENSTRAT format (or sixth column of input individual file in PED format)
-  should be real numbers.  The value -100.0 signifies "missing data".
-  If -q is set to NO, these values should be "Case" or "Control".
-  The default value for the -q parameter is NO.     
--p example.pca : input file of principal components (output of smartpca.perl)
--k 1 : (Default is 10) number of principal components along which to
-  correct for stratification.  Note that l must be less than or equal to
-  the number of principal components reported in the file example.pca.
--o example.chisq : chisq association statistics.  File contains log of
-  flags to eigenstrat program, followed by one line per SNP:
-  The first entry of each line is Armitage chisq statistic (Armitage, 1955)
-    defined as NSAMPLES x (correlation between genotype and phenotype)^2.
-    If the set of individuals with genotype and phenotype both valid
-    is monomorphic for either genotype or phenotype, then NA is reported.
-  The second entry of each line is the EIGENSTRAT chisq statistic, defined as
-    (NSAMPLES-l-1) x (corr between adjusted_genotype and adjusted_phenotype)^2.
-    If the set of individuals with genotype and phenotype both valid
-    is monomorphic for either genotype or phenotype, then NA is reported.
-  Note: even if l=0, there is a tiny difference between the two statistics
-    because Armitage uses NSAMPLES while we use NSAMPLES-1, which we
-    consider to be appropriate.
--l example.log : standard output file
-```
 
 **F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT**
 
@@ -246,10 +184,54 @@ smarteigenstrat.perl \
 
  only apply to large datasets, for small dataset we go step 5 to remove possible outliers
  
+ Rerun smartpca function
+ 
  
 ####5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
-
-
+ 
+ A. excluding from the GWA data those SNPs that do not feature in the genotype data of the four original HapMap3 populations
+ ```
+ plink --bfile raw-GWA-data --extract hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt --make-bed --out raw-GWA-data.hapmap-snps
+. 
+ ```
+ B. Merge data with HapMap3 population
+ ```
+ plink \
+ --bfile raw-GWA-data.hapmap-snps \
+ --bmerge hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bed hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bim hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.fam \
+ --extract raw-GWA-data.prune.in \
+ --make-bed \
+ --out raw-GWA-data.hapmap3r2.pruned
+ ```
+ C. Rerun smarpca
+ 
+ ```
+ convertf -p <(printf "genotypename: raw-GWA-data.hapmap3r2.pruned.bed
+ snpname: raw-GWA-data.hapmap3r2.pruned.bim
+ indivname: raw-GWA-data.hapmap3r2.pruned.fam
+ outputformat: EIGENSTRAT
+ genotypeoutname: raw-GWA-data.hapmap3r2.pruned.eigenstratgeno
+ snpoutname: raw-GWA-data.hapmap3r2.pruned.snp
+ indivoutname: raw-GWA-data.hapmap3r2.pruned.ind")
+ ```
+ Followed by:
+ ```
+ smartpca.perl \
+ -i raw-GWA-data.hapmap3r2.pruned.eigenstratgeno \
+ -a raw-GWA-data.hapmap3r2.pruned.snp \
+ -b raw-GWA-data.hapmap3r2.pruned.ind \
+ -o raw-GWA-data.hapmap3r2.pruned.pca \
+ -p raw-GWA-data.hapmap3r2.pruned.plot \
+ -e raw-GWA-data.hapmap3r2.pruned.eval \
+ -l raw-GWA-data.hapmap3r2.pruned.log \
+ -m 0 \
+ -t 100 \
+ -k 100 \
+ -s 6
+ ```
+ Then check **raw-GWA-data.hapmap3r2.pruned.plot.pca** to decide whether to remove outliers or not.  
+ 
+ 
 ####6. Removal of all individuals failing sample QC
 
 In shell, type:
