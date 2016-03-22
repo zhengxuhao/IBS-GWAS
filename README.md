@@ -1,11 +1,15 @@
 # IBS-GWAS
+
 GWAS on multinational IBS case-control cohorts, about creating standardized protocol for quality control (QC), imputation and association analysis.
+
 
 ##QUALITY CONTROL (QC) PROTOCOL FOR IBS GWAS DATA
 
 **Please note**: In this protocol, we are going to perform QC on a ‘per-individual’ basis before conducting QC on a ‘per-marker’ basis to maximize the number of markers remaining in the study (suggested by Nature Protocols. 2010, DOI: 10.1038/nprot.2010.116, PMID: 21085122)
 
+
 ####Data
+
 In Plink format (PED, MAP or BED, BIM & FAM)
 
 ####Tool used in this protocol:
@@ -18,7 +22,9 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 
 ###PART A: INDIVIDUAL SAMPLE QC
 
+
 ####1. Identification of individuals with discordant sex information
+
 
   In shell, type:
 > plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
@@ -28,6 +34,8 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 > awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
 
  File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
+
+
 ####2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
 
  We will remove
@@ -43,6 +51,7 @@ In Plink format (PED, MAP or BED, BIM & FAM)
  Then run rscript “QC_imiss_het.R” in R environment
 
  A graph **raw-GWA-data.imiss-vs-het.pdf** will be generated for checking missing calling rates and heterozygosity rate of all individuals.  
+ 
  A file **fail-imisshet-qc.txt** will be generated containing family IDs and individual IDs of all these individuals to remove.    
 
 ####3. Identification of duplicated or related individuals
@@ -69,10 +78,12 @@ In shell, type:
 
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
 
-####4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package (or flashpca?)
 
-Note: Run EIGENSOFT using LD-pruned binary files
-EIGENSOFT (according to Nature protocol paprr)
+####4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package
+
+
+Note: Run EIGENSOFT using **LD-pruned binary files**
+
 
 **A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF**
 
@@ -102,31 +113,123 @@ smartpca.perl \
 -k 100 \
 -s 6
 ```
+**Interpertation**:
+-i example.geno  : genotype file in any format
+-a example.snp   : snp file in any format 
+-b example.ind   : indiv file in any format 
+-k k             : (Default is 10) number of principal components to output
+-o example.pca   : output file of principal components.  Individuals removed
+                   as outliers will have all values set to 0.0 in this file.
+-p example.plot  : prefix of output plot files of top 2 principal components.
+                   (labeling individuals according to labels in indiv file)
+-e example.eval  : output file of all eigenvalues
+-l example.log   : output logfile
+-m maxiter       : (Default is 5) maximum number of outlier removal iterations.
+                   To turn off outlier removal, set -m 0.
+-t topk          : (Default is 10) number of principal components along which 
+                   to remove outliers during each outlier removal iteration.
+-s sigma         : (Default is 6.0) number of standard deviations which an
+                   individual must exceed, along one of topk top principal
+		   components, in order to be removed as an outlier.
 
-**C. *(optional)* Plot top 2 PCs by ploteig function**
+OPTIONAL FLAGS:
+-w poplist       : compute eigenvectors using populations in poplist only,
+                   where poplist is an ASCII file with one population per line
+-y plotlist      : output plot will include populations in plotlist only, 
+                   where plotlist is an ASCII file with one population per line
+-z badsnpname    : list of SNPs which should be excluded from the analysis
+-q YES/NO        : If set to YES, assume that there is a single population and
+                   the population field contains real-valued phenotypes.
+                   (Corresponds to qtmode parameter in smartpca program.)
+                   The default value for this parameter is NO.
 
-The plot (in PDF file) will be generated in above smartpca process, running on the top 2 PCs.  If these fail to work,  
 
-evec2pca (if .pca file was not generated automatically)
+**C. (Optional) Plot top 2 PCs by *ploteig* function**
 
->evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data_pop_strat.ind raw-GWA-data_pop_strat.pca
+A pca plot (in PDF file) will be generated in above smartpca process, running on the top 2 PCs.  If that fails to work, run plotpig function to  
 
-**D. STATISTICAL SIGNFICANCE of each principal component: twstats program**
+```
+plotpig \
+-i raw-GWA-data_pop_strat.pca.evec \
+-c 1:2 \
+-p Case:Control \
+-x \
+-o raw-GWA-data_pop_strat.plot
+```
 
->twstats -t twtable -i raw-GWA-data_pop_strat.eval -o GWA-data_pop_strat_twout
+
+**D. Check STATISTICAL SIGNFICANCE of each principal component by twstats**
+
+```
+> twstats \
+-t twtable \
+-i raw-GWA-data_pop_strat.eval \
+-o GWA-data_pop_strat_twout
+```
+ Corrected only PCs with P values <0.05 
 
 **E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.**  
 
+ **Optional** Run evec2pca function to tranfer *.evec* file to *.pca* (if .pca file was not generated in smartpca process)
 
->smarteigenstrat.perl -i raw-GWA-data_pop_strat.eigenstratgeno -a raw-GWA-data_pop_strat.snp -b raw-GWA-data_pop_strat.ind -q NO -p raw-GWA-data_pop_strat.pca.evec -k 27 -o raw-GWA-data_pop_strat_cor.chisq -l raw-GWA-data_pop_strat_cor.log
+ >evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data_pop_strat.ind raw-GWA-data_pop_strat.pca
+
+ Then run smarteigenstrat program:
+
+``` 
+smarteigenstrat.perl \
+-i raw-GWA-data_pop_strat.eigenstratgeno \
+-a raw-GWA-data_pop_strat.snp \
+-b raw-GWA-data_pop_strat.ind \
+-q NO \
+-p raw-GWA-data_pop_strat.pca.evec \
+-k 10 \
+-o raw-GWA-data_pop_strat_cor.chisq \
+-l raw-GWA-data_pop_strat_cor.log
+```
+**Interpretation**:
+-i example.geno : genotype file in any format
+-a example.snp : snp file in any format 
+-b example.ind : individual file in any format
+  We note that phenotype information will be contained in example.ind,
+  either as Case/Control labels or quantitative phenotypes if -q set to YES.
+-q YES/NO : If set to YES, use quantitative phenotypes in example.ind.
+  If -q is set to YES, the third column of the input individual file
+  in EIGENSTRAT format (or sixth column of input individual file in PED format)
+  should be real numbers.  The value -100.0 signifies "missing data".
+  If -q is set to NO, these values should be "Case" or "Control".
+  The default value for the -q parameter is NO.     
+-p example.pca : input file of principal components (output of smartpca.perl)
+-k 1 : (Default is 10) number of principal components along which to
+  correct for stratification.  Note that l must be less than or equal to
+  the number of principal components reported in the file example.pca.
+-o example.chisq : chisq association statistics.  File contains log of
+  flags to eigenstrat program, followed by one line per SNP:
+  The first entry of each line is Armitage chisq statistic (Armitage, 1955)
+    defined as NSAMPLES x (correlation between genotype and phenotype)^2.
+    If the set of individuals with genotype and phenotype both valid
+    is monomorphic for either genotype or phenotype, then NA is reported.
+  The second entry of each line is the EIGENSTRAT chisq statistic, defined as
+    (NSAMPLES-l-1) x (corr between adjusted_genotype and adjusted_phenotype)^2.
+    If the set of individuals with genotype and phenotype both valid
+    is monomorphic for either genotype or phenotype, then NA is reported.
+  Note: even if l=0, there is a tiny difference between the two statistics
+    because Armitage uses NSAMPLES while we use NSAMPLES-1, which we
+    consider to be appropriate.
+-l example.log : standard output file
+
 
 **F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT**
 
->gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
+> gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
 
-**Remove outliers (only apply to large datasets, otherwise go step 5  to remove possible outliers)**
+ Check the lamda value before and after correction, then change QC number for correction to adjust.
 
+**G. Remove outliers**
 
+ only apply to large datasets, for small dataset we go step 5 to remove possible outliers
+ 
+ 
 ####5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
 
 
