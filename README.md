@@ -55,7 +55,7 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 In shell, type:
 >plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
 
-**B. Generating IBS matrix＊＊
+**B. Generating IBS matrix**
 
  In shell, type:
 >plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
@@ -77,17 +77,11 @@ EIGENSOFT (according to Nature protocol paprr)
 **A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF**
 
 >convertf -p <(printf "genotypename: raw-GWA-data.bed
->
 >snpname: raw-GWA-data.bim
->
 >indivname: raw-GWA-data.fam
->
 >outputformat: EIGENSTRAT
->
 >genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
->
 >snpoutname: raw-GWA-data_pop_strat.snp
->
 >indivoutname: raw-GWA-data_pop_strat.ind")
 
 **B. Run SmartPCA to check population stratification by principal component analysis**
