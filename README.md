@@ -18,7 +18,7 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 
 ###PART A: INDIVIDUAL SAMPLE QC
 
-  1. Identification of individuals with discordant sex information
+####1. Identification of individuals with discordant sex information
 
   In shell, type:
 >plink --bfile raw-GWA-data --check-sex --out raw-GWA-data 
@@ -28,13 +28,12 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 >awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
 
  File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
-
-  2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
+####2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
 
  We will remove
 
- *Individuals with elevated missing data rates (__missing>0,03__) 
- *Individuals with outlying heterozygosity rate (__out of mean +/- 3 SD__)
+ * Individuals with elevated missing data rates (__missing>0,03__) 
+ * Individuals with outlying heterozygosity rate (__out of mean +/- 3 SD__)
 
  In shell, type:
 >plink --bfile raw-GWA-data --missing --out raw-GWA-data 
@@ -46,16 +45,17 @@ In Plink format (PED, MAP or BED, BIM & FAM)
  A graph **raw-GWA-data.imiss-vs-het.pdf** will be generated for checking missing calling rates and heterozygosity rate of all individuals.  
  A file **fail-imisshet-qc.txt** will be generated containing family IDs and individual IDs of all these individuals to remove.    
 
- 3. Identification of duplicated or related individuals
+####3. Identification of duplicated or related individuals
 
-####Pruning data to reduce the number of markers to reduce computational complexity
+**A. Pruning data to reduce the number of markers to reduce computational complexity**
 
- *Using a window of 50 variants and a shift of 5 variants between windows, with an r2 cut-off of 0.2:  
- *Strong LD region will be excluded based on “high-LD-regions.txt”.
- In shell, type:
+ * Using a window of 50 variants and a shift of 5 variants between windows, with an r2 cut-off of 0.2:  
+ * Strong LD region will be excluded based on “high-LD-regions.txt”.
+ 
+In shell, type:
 >plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
 
-####Generating IBS matrix
+**B. Generating IBS matrix＊＊
 
  In shell, type:
 >plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
@@ -69,62 +69,94 @@ In Plink format (PED, MAP or BED, BIM & FAM)
 
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
 
- 4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package (or flashpca?)
+####4. Population stratification by principal component analysis in EIGENSOFT 6.0.6 package (or flashpca?)
 
 Note: Run EIGENSOFT using LD-pruned binary files
 EIGENSOFT (according to Nature protocol paprr)
 
-Convert Plink Bfiles to EIGENSOFT format using CONVERTF
->convertf -p <(printf "genotypename: raw-GWA-data.bed
-snpname: raw-GWA-data.bim
-indivname: raw-GWA-data.fam
-outputformat: EIGENSTRAT
-genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
-snpoutname: raw-GWA-data_pop_strat.snp
-indivoutname: raw-GWA-data_pop_strat.ind")
+**A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF**
 
-Run SmartPCA to check population stratification by principal component analysis
->perl /home/sukmb376/EIG6.0.1/bin/smartpca.perl -i raw-GWA-data_pop_strat.eigenstratgeno -a raw-GWA-data_pop_strat.snp -b raw-GWA-data_pop_strat.ind -o raw-GWA-data_pop_strat.pca -p raw-GWA-data_pop_strat.plot -e raw-GWA-data_pop_strat.eval -l raw-GWA-data_pop_strat.log -k 2 -t 2 
+>convertf -p <(printf "genotypename: raw-GWA-data.bed
+>
+>snpname: raw-GWA-data.bim
+>
+>indivname: raw-GWA-data.fam
+>
+>outputformat: EIGENSTRAT
+>
+>genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
+>
+>snpoutname: raw-GWA-data_pop_strat.snp
+>
+>indivoutname: raw-GWA-data_pop_strat.ind")
+
+**B. Run SmartPCA to check population stratification by principal component analysis**
+
+
 >smartpca.perl \
--i raw-GWA-data_pop_strat.eigenstratgeno \
--a raw-GWA-data_pop_strat.snp \
--b raw-GWA-data_pop_strat.ind \
--o raw-GWA-data_pop_strat.pca \
--p raw-GWA-data_pop_strat.plot \
--e raw-GWA-data_pop_strat.eval \
--l raw-GWA-data_pop_strat.log \
--m 0 \
--t 100 \
--k 100 \
--s 6
-#(optional) Plot top 2 PCs by ploteig function
+
+>-i raw-GWA-data_pop_strat.eigenstratgeno \
+>
+>-a raw-GWA-data_pop_strat.snp \
+>
+>-b raw-GWA-data_pop_strat.ind \
+>
+>-o raw-GWA-data_pop_strat.pca \
+>
+>-p raw-GWA-data_pop_strat.plot \
+>
+>-e raw-GWA-data_pop_strat.eval \
+>
+>-l raw-GWA-data_pop_strat.log \
+>
+>-m 0 \
+>
+>-t 100 \
+>
+>-k 100 \
+>
+>-s 6
+
+**C. *(optional)* Plot top 2 PCs by ploteig function**
+
 The plot (in PDF file) will be generated in above smartpca process, running on the top 2 PCs.  If these fail to work,  
 
 evec2pca (if .pca file was not generated automatically)
+
 >evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data_pop_strat.ind raw-GWA-data_pop_strat.pca
 
-STATISTICAL SIGNFICANCE of each principal component: twstats program
+**D. STATISTICAL SIGNFICANCE of each principal component: twstats program**
+
 >twstats -t twtable -i raw-GWA-data_pop_strat.eval -o GWA-data_pop_strat_twout
 
-smarteigenstrat.perl: run EIGENSTRAT stratification correction.  This program supports all 5 file formats, and supports quantitative phenotypes.
+**E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.**  
+
+
 >smarteigenstrat.perl -i raw-GWA-data_pop_strat.eigenstratgeno -a raw-GWA-data_pop_strat.snp -b raw-GWA-data_pop_strat.ind -q NO -p raw-GWA-data_pop_strat.pca.evec -k 27 -o raw-GWA-data_pop_strat_cor.chisq -l raw-GWA-data_pop_strat_cor.log
-gc.perl: apply Genomic Control (Devlin and Roeder, 1999) to the association statistics computed by EIGENSTRAT
+
+**F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT**
+
 >gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
-Remove outliers (only apply to large datasets, otherwise go step 5  to remove possible outliers)
-5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
+
+**Remove outliers (only apply to large datasets, otherwise go step 5  to remove possible outliers)**
 
 
-6. Removal of all individuals failing sample QC
+####5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
+
+
+####6. Removal of all individuals failing sample QC
 
 In shell, type:
-cat fail-* | sort -k1 | uniq > fail-qc-inds.txt
+>cat fail-* | sort -k1 | uniq > fail-qc-inds.txt
 
-The file “fail-qc-inds.txt” should now contain a list of unique individuals failing the previous QC steps. 
+The file **fail-qc-inds.txt** should now contain a list of unique individuals failing the previous QC steps. 
+
 To remove them from the data set, type the following command at the shell prompt:
-plink --bfile raw-GWA-data --remove fail-qc-inds.txt --make-bed --out clean-inds-GWA-data
+
+>plink --bfile raw-GWA-data --remove fail-qc-inds.txt --make-bed --out clean-inds-GWA-data
 
 
-PART B: SNP QC
+##PART B: SNP QC
 
 1. Identification of all SNPs with an excessive missing data rate
 
