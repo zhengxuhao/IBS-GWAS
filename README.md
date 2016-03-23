@@ -5,15 +5,25 @@ GWAS on multinational IBS case-control cohorts, about creating standardized prot
 
 ##QUALITY CONTROL (QC) PROTOCOL FOR IBS GWAS DATA
 
-**Please note**: In this protocol, we are going to perform QC on a ‘per-individual’ basis before conducting QC on a ‘per-marker’ basis to maximize the number of markers remaining in the study (suggested by Nature Protocols. 2010, DOI: 10.1038/nprot.2010.116, PMID: 21085122)
+####Reference 
 
+1. Anderson, C. A. et al. Data quality control in genetic case-control association studies. Nat. Protoc. 5, 1564–1573 (2010).
+2. Coleman, J. R. I. et al. Quality control, imputation and analysis of genome-wide genotyping data from the Illumina HumanCoreExome microarray. Brief. Funct. Genomics elv037 (2015). doi:10.1093/bfgp/elv037 [script here](https://github.com/JoniColeman/gwas_scripts)
 
-####Data
+####Contact
 
-In Plink format (PED, MAP or BED, BIM & FAM)
+**Tenghao Zheng**, tenghao.zheng@ki.se 
+
+####Data Input
+
+Plink binary format (BED, BIM & FAM)
 
 ####Tool used in this protocol:
 
+Computer workstation with Unix or Linux operating system
+ 
+  * Computer workstation with Unix or Linux operating system
+  
   * [PLINK 1.9](https://www.cog-genomics.org/plink2)
   
   * SMARTPCA function in [EIGENSOFT version 6.0.1](http://www.hsph.harvard.edu/alkes-price/software/) for running PCA 
