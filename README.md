@@ -104,118 +104,23 @@ perl run-IBD-QC.pl raw-GWA-data
 ```
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
 
-
-###4. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
-
-
-Note: Run EIGENSOFT using **LD-pruned binary files**
-
-
-####A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF
-
-```
-convertf -p <(printf "genotypename: raw-GWA-data.bed
-snpname: raw-GWA-data.bim
-indivname: raw-GWA-data.fam
-outputformat: EIGENSTRAT
-genotypeoutname: raw-GWA-data.eigenstratgeno
-snpoutname: raw-GWA-data.snp
-indivoutname: raw-GWA-data.ind")
-```
-
-####B. Run SmartPCA to check population stratification by principal component analysis
-
-```
-smartpca.perl \
--i raw-GWA-data.eigenstratgeno \
--a raw-GWA-data.snp \
--b raw-GWA-data.ind \
--o raw-GWA-data_pop_strat.pca \
--p raw-GWA-data_pop_strat.plot \
--e raw-GWA-data_pop_strat.eval \
--l raw-GWA-data_pop_strat.log \
--m 0 \
--t 100 \
--k 100 \
--s 6
-```
-  
-
-
-####C. (**Optional**) Plot top 2 PCs by *ploteig* function
-
-A pca plot (in PDF file) will be generated in above smartpca process, running on the top 2 PCs.  If that fails to work, run plotpig function to  
-
-```
-plotpig \
--i raw-GWA-data_pop_strat.pca.evec \
--c 1:2 \
--p Case:Control \
--x \
--o raw-GWA-data_pop_strat.plot
-```
-
-
-####D. Check STATISTICAL SIGNFICANCE of each principal component by twstats
-
-```
-twstats \
--t twtable \
--i raw-GWA-data_pop_strat.eval \
--o GWA-data_pop_strat_twout
-```
-
- Check P vaule of each PC in file "GWA-data_pop_strat_twout", corrected only PCs with P values <0.05. 
-
-####E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.
-
-**Optional** Run evec2pca function to tranfer *.evec* file to *.pca* (if .pca file was not generated in smartpca process)
-
-```
-evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data.ind raw-GWA-data_pop_strat.pca
-```
-
-Then run smarteigenstrat program:
-
-``` 
-smarteigenstrat.perl \
--i raw-GWA-data.eigenstratgeno \
--a raw-GWA-data.snp \
--b raw-GWA-data.ind \
--q NO \
--p raw-GWA-data_pop_strat.pca.evec \
--k 10 \
--o raw-GWA-data_pop_strat_cor.chisq \
--l raw-GWA-data_pop_strat_cor.log
-```
-
-
-
-####F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT
-
-```
-gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
-```
-
-Check the lamda value before and after correction in output report file, then change QC number for correction to adjust if necessary.
-
-####G. Remove outliers
-
-only apply to large datasets, for small dataset we go step 5 to remove possible outliers
  
-Rerun smartpca function
+###4. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
+
+Required: 
  
+* HapMap reference population (hapmap3CEU.CHB.JPT.YRI.b37) has already been transformed to Hg19 build, including CEU CHB JPT YRI populations.  [script here](https://github.com/Wall-Facer/IBS-GWAS/blob/master/Build_HapMapb37_ref).
+* hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt (list of all HapMap3 markers without a/t & c/g markers)
+* smarpca, convertf functions in EIGENSOFT 6.0.1 package
  
-###5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
- 
-####A. excluding from the GWA data those SNPs that do not feature in the genotype data of the four original HapMap3 populations
+####A. excluding  A/T and C/G SNPs in HapMap3 data
 
 ```
 plink \
 --bfile raw-GWA-data \
 --extract hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt \
 --make-bed \
---out raw-GWA-data.hapmap-snps
+--out raw-GWA-data.no-at-cg-snps
 ```
  
  
@@ -223,25 +128,33 @@ plink \
 
 ```
 plink \
---bfile raw-GWA-data.hapmap-snps \
---bmerge hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bed hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bim hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.fam \
+--bfile raw-GWA-data.no-at-cg-snps \
+--bmerge hapmap3CEU.CHB.JPT.YRI.b37 \
 --extract raw-GWA-data.prune.in \
 --make-bed \
---out raw-GWA-data.hapmap3r2.pruned
+--out raw-GWA-data.Hapmap.merged
+```
+
+**If failed, run following (remove "_###_"):**
+
+```
+plink --bfile hapmap3CEU.CHB.JPT.YRI.b37 --flip raw-GWA-data.Hapmap.merged-merge.missnp --make-bed --out hapmap3CEU.CHB.JPT.YRI.b37_trial
+
+plink --bfile raw-GWA-data.no-at-cg-snps --bmerge hapmap3CEU.CHB.JPT.YRI.b37_trial --make-bed --extract raw-GWA-data.pruned.in --out raw-GWA-data.Hapmap.merged
 ```
 
 
 
-####C. Rerun smarpca
+####C. Run Smarpca
  
 ```
-convertf -p <(printf "genotypename: raw-GWA-data.hapmap3r2.pruned.bed
-snpname: raw-GWA-data.hapmap3r2.pruned.bim
-indivname: raw-GWA-data.hapmap3r2.pruned.fam
+convertf -p <(printf "genotypename: raw-GWA-data.Hapmap.merged.bed
+snpname: raw-GWA-data.Hapmap.merged.bim
+indivname: raw-GWA-data.Hapmap.merged.fam
 outputformat: EIGENSTRAT
-genotypeoutname: raw-GWA-data.hapmap3r2.pruned.eigenstratgeno
-snpoutname: raw-GWA-data.hapmap3r2.pruned.snp
-indivoutname: raw-GWA-data.hapmap3r2.pruned.ind")
+genotypeoutname: raw-GWA-data.Hapmap.merged.eigenstratgeno
+snpoutname: raw-GWA-data.Hapmap.merged.snp
+indivoutname: raw-GWA-data.Hapmap.merged.ind")
 
 ```
 
@@ -249,23 +162,25 @@ Followed by:
 
 ```
 smartpca.perl \
--i raw-GWA-data.hapmap3r2.pruned.eigenstratgeno \
--a raw-GWA-data.hapmap3r2.pruned.snp \
--b raw-GWA-data.hapmap3r2.pruned.ind \
--o raw-GWA-data.hapmap3r2.pruned.pca \
--p raw-GWA-data.hapmap3r2.pruned.plot \
--e raw-GWA-data.hapmap3r2.pruned.eval \
--l raw-GWA-data.hapmap3r2.pruned.log \
+-i raw-GWA-data.Hapmap.merged.eigenstratgeno \
+-a raw-GWA-data.Hapmap.merged.snp \
+-b raw-GWA-data.Hapmap.merged.ind \
+-o raw-GWA-data.Hapmap.merged.pca \
+-p raw-GWA-data.Hapmap.merged.plot \
+-e raw-GWA-data.Hapmap.merged.eval \
+-l raw-GWA-data.Hapmap.merged.log \
 -m 0 \
--t 100 \
--k 100 \
--s 6
+-t 10 \
+-k 10
 
 ```
 
-Then check **raw-GWA-data.hapmap3r2.pruned.plot.pca** to decide whether to remove outliers or not.  
+Then check **raw-GWA-data.Hapmap.merged.plot.pdf** to decide whether to remove outliers or not, create **"fail-outliers-QC.txt"**.   
  
- 
+###5. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
+
+
+
 ###6. Removal of all individuals failing sample QC
 
 In shell, type:
