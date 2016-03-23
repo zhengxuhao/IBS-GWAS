@@ -1,0 +1,48 @@
+#Download latest Hapmap data
+wget ftp://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2010-05_phaseIII/plink_format/hapmap3_r3_b36_fwd.consensus.qc.poly.map.gz
+wget ftp://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2010-05_phaseIII/plink_format/hapmap3_r3_b36_fwd.consensus.qc.poly.ped.gz
+wget ftp://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2010-05_phaseIII/relationships_w_pops_041510.txt
+
+gunzip -d hapmap3_r3_b36_fwd.consensus.qc.poly.ped.gz
+gunzip -d hapmap3_r3_b36_fwd.consensus.qc.poly.map.gz
+
+
+#Create list of sampels to extract
+
+awk '$7 == "CEU" {print $1,$2}' relationships_w_pops_041510.txt > selectSamples.txt
+awk '$7 == "CHB" {print $1,$2}' relationships_w_pops_041510.txt >> selectSamples.txt
+awk '$7 == "JPT" {print $1,$2}' relationships_w_pops_041510.txt >> selectSamples.txt
+awk '$7 == "YRI" {print $1,$2}' relationships_w_pops_041510.txt >> selectSamples.txt
+
+#Keep CEU CHB JPT YRI samples & remove a/t c/g snps
+
+./plink \
+--file hapmap3_r3_b36_fwd.consensus.qc.poly \
+--out hapmap3_r3_b36_fwd.consensus.qc.poly.no-at-cg-snps \
+--extract hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt \
+--keep selectSamples.txt \
+--recode
+
+
+#Create bed 
+
+awk '{$5=$2;$2=$4;$3=$4+1;$1="chr"$1;print $1,$2,$3,$5}' OFS="\t" hapmap3_r3_b36_fwd.consensus.qc.poly.no-at-cg-snps.map > hapmap3CEU.CHB.JPT.YRI.B36Mb6b36.bed
+
+#Update mapping
+liftOver -bedPlus=4 hapmap3CEU.CHB.JPT.YRI.B36Mb6b36.bed hg18ToHg19.over.chain.gz hapmap3CEU.CHB.JPT.YRI.b37.bed hapmap3CEU.CHB.JPT.YRI.B36Mb6b36unmapped.txt
+
+
+#Create mapping update list used by Plink
+awk '{print $4, $2}' OFS="\t" hapmap3CEU.CHB.JPT.YRI.b37.bed > hapmap3CEU.CHB.JPT.YRI.b37.bed.txt
+
+#Update plink mappings
+./plink \
+--file hapmap3_r3_b36_fwd.consensus.qc.poly.no-at-cg-snps \
+--recode \
+--out hapmap3CEU.CHB.JPT.YRI.b37 \
+--update-map hapmap3CEU.CHB.JPT.YRI.b37.bed.txt
+
+#Create binary PLINK files for Hapmap reference data
+./plink \
+--file hapmap3CEU.CHB.JPT.YRI.b37 \
+--out hapmap3CEU.CHB.JPT.YRI.b37
