@@ -3,22 +3,22 @@
 GWAS on multinational IBS case-control cohorts, about creating standardized protocol for quality control (QC), imputation and association analysis.
 
 
-##QUALITY CONTROL (QC) PROTOCOL FOR IBS GWAS DATA
+#QUALITY CONTROL (QC) PROTOCOL FOR IBS GWAS DATA
 
-####Reference 
+##Reference 
 
 1. Anderson, C. A. et al. Data quality control in genetic case-control association studies. Nat. Protoc. 5, 1564–1573 (2010).
 2. Coleman, J. R. I. et al. Quality control, imputation and analysis of genome-wide genotyping data from the Illumina HumanCoreExome microarray. Brief. Funct. Genomics elv037 (2015). doi:10.1093/bfgp/elv037 [script here](https://github.com/JoniColeman/gwas_scripts)
 
-####Contact
+##Contact
 
 **Tenghao Zheng**, tenghao.zheng@ki.se 
 
-####Data Input
+##Data Input
 
 Plink binary format (BED, BIM & FAM)
 
-####Tool used in this protocol:
+##Tool used in this protocol:
 
 Computer workstation with Unix or Linux operating system
  
@@ -30,10 +30,10 @@ Computer workstation with Unix or Linux operating system
   
   * [R](http://cran.r-project.org/): for statistical in data analysis and graphing 
 
-###PART A: INDIVIDUAL SAMPLE QC
+##PART A: INDIVIDUAL SAMPLE QC
 
 
-####1. Identification of individuals with discordant sex information
+###1. Identification of individuals with discordant sex information
 
 
   In shell, type:
@@ -47,7 +47,7 @@ awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-se
  File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
 
 
-####2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
+###2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
 
  We will remove
 
@@ -65,7 +65,7 @@ awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-se
  
  A file **fail-imisshet-qc.txt** will be generated containing family IDs and individual IDs of all these individuals to remove.    
 
-####3. Identification of duplicated or related individuals
+###3. Identification of duplicated or related individuals
 
 **A. Pruning data to reduce the number of markers to reduce computational complexity**
 
@@ -96,13 +96,13 @@ In shell, type:
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
 
 
-####4. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
+###4. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
 
 
 Note: Run EIGENSOFT using **LD-pruned binary files**
 
 
-**A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF**
+####A. Convert Plink Bfiles to EIGENSOFT format using CONVERTF
 
 ```
 convertf -p <(printf "genotypename: raw-GWA-data.bed
@@ -114,7 +114,7 @@ snpoutname: raw-GWA-data_pop_strat.snp
 indivoutname: raw-GWA-data_pop_strat.ind")
 ```
 
-**B. Run SmartPCA to check population stratification by principal component analysis**
+####B. Run SmartPCA to check population stratification by principal component analysis
 
 ```
 smartpca.perl \
@@ -133,7 +133,7 @@ smartpca.perl \
   
 
 
-**C. (Optional) Plot top 2 PCs by *ploteig* function**
+####C. (**Optional**) Plot top 2 PCs by *ploteig* function
 
 A pca plot (in PDF file) will be generated in above smartpca process, running on the top 2 PCs.  If that fails to work, run plotpig function to  
 
@@ -147,7 +147,7 @@ plotpig \
 ```
 
 
-**D. Check STATISTICAL SIGNFICANCE of each principal component by twstats**
+####D. Check STATISTICAL SIGNFICANCE of each principal component by twstats
 
 ```
 > twstats \
@@ -158,7 +158,7 @@ plotpig \
 
  Corrected only PCs with P values <0.05 
 
-**E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.**  
+####E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.
 
  **Optional** Run evec2pca function to tranfer *.evec* file to *.pca* (if .pca file was not generated in smartpca process)
 
@@ -182,7 +182,7 @@ smarteigenstrat.perl \
    
 
 
-**F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT**
+####F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT
 
 ```
  gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
@@ -190,21 +190,21 @@ smarteigenstrat.perl \
 
  Check the lamda value before and after correction, then change QC number for correction to adjust.
 
-**G. Remove outliers**
+####G. Remove outliers
 
  only apply to large datasets, for small dataset we go step 5 to remove possible outliers
  
  Rerun smartpca function
  
  
-####5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
+###5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
  
- A. excluding from the GWA data those SNPs that do not feature in the genotype data of the four original HapMap3 populations
+ ####A. excluding from the GWA data those SNPs that do not feature in the genotype data of the four original HapMap3 populations
  ```
  plink --bfile raw-GWA-data --extract hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt --make-bed --out raw-GWA-data.hapmap-snps
 . 
  ```
- B. Merge data with HapMap3 population
+ ####B. Merge data with HapMap3 population
  ```
  plink \
  --bfile raw-GWA-data.hapmap-snps \
@@ -213,7 +213,7 @@ smarteigenstrat.perl \
  --make-bed \
  --out raw-GWA-data.hapmap3r2.pruned
  ```
- C. Rerun smarpca
+ ####C. Rerun smarpca
  
  ```
  convertf -p <(printf "genotypename: raw-GWA-data.hapmap3r2.pruned.bed
@@ -242,7 +242,7 @@ smarteigenstrat.perl \
  Then check **raw-GWA-data.hapmap3r2.pruned.plot.pca** to decide whether to remove outliers or not.  
  
  
-####6. Removal of all individuals failing sample QC
+###6. Removal of all individuals failing sample QC
 
 In shell, type:
 >cat fail-* | sort -k1 | uniq > fail-qc-inds.txt
