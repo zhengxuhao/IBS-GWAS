@@ -8,7 +8,7 @@ GWAS on multinational IBS case-control cohorts, about creating standardized prot
 ##Reference 
 
 1. Anderson, C. A. et al. Data quality control in genetic case-control association studies. Nat. Protoc. 5, 1564–1573 (2010).
-2. Coleman, J. R. I. et al. Quality control, imputation and analysis of genome-wide genotyping data from the Illumina HumanCoreExome microarray. Brief. Funct. Genomics elv037 (2015). doi:10.1093/bfgp/elv037 [script here](https://github.com/JoniColeman/gwas_scripts)
+2. Coleman, J. R. I. et al. Quality control, imputation and analysis of genome-wide genotyping data from the Illumina HumanCoreExome microarray. Brief. Funct. Genomics elv037 (2015). doi:10.1093/bfgp/elv037. [Script here](https://github.com/JoniColeman/gwas_scripts)
 
 ##Contact
 
@@ -56,8 +56,8 @@ awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-se
 
  In shell, type:
 ```
- plink --bfile raw-GWA-data --missing --out raw-GWA-data 
- plink --bfile raw-GWA-data --het --out raw-GWA-data 
+plink --bfile raw-GWA-data --missing --out raw-GWA-data 
+plink --bfile raw-GWA-data --het --out raw-GWA-data 
 ```
  Then run rscript “QC_imiss_het.R” in R environment
 
@@ -69,28 +69,37 @@ awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-se
 
 **A. Pruning data to reduce the number of markers to reduce computational complexity**
 
- * Using a window of 50 variants and a shift of 5 variants between windows, with an r2 cut-off of 0.2:  
+ * Using a window of **50** variants and a shift of **5** variants between windows, with an r2 cut-off of **0.2**:  
  * Strong LD region will be excluded based on “high-LD-regions.txt”.
  
 In shell, type:
 ```
- plink --file raw-GWA-data --exclude high-LD-regions.txt --range --indep-pairwise 50 5 0.2 --out raw-GWA-data
+plink \
+--file raw-GWA-data \
+--exclude high-LD-regions.txt \
+--range \
+--indep-pairwise 50 5 0.2 \
+--out raw-GWA-data
 ```
 
 **B. Generating IBS matrix**
 
  In shell, type:
 ```
- plink --bfile raw-GWA-data --extract raw-GWA-data.prune.in --genome --out raw-GWA-data
+plink \
+--bfile raw-GWA-data \
+--extract raw-GWA-data.prune.in \
+--genome \
+--out raw-GWA-data
 ```
 
- Then we will identify all pairs of individuals with IBS > 0.185 which outputs the ID of the individual from the pair with lowest call rate (the one with high call rate in a pair will be kept).  
+ Then we will identify all pairs of individuals with **IBS > 0.185** which outputs the ID of the individual from the pair with lowest call rate (**the one with high call rate in a pair will be kept**).  
 
  Note:  The expectation is that IBD = 1 for duplicates or monozygotic twins, IBD = 0.5 for first-degree relatives, IBD = 0.25 for second-degree relatives and IBD = 0.125 for third-degree relatives.  It is typical to remove one individual from each pair with an IBD value of > 0.1875, which is halfway between the expected IBD for third- and second-degree relatives.
 
  In shell, type:
 ```
- perl run-IBD-QC.pl raw-GWA-data
+perl run-IBD-QC.pl raw-GWA-data
 
 ```
  A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
@@ -109,18 +118,18 @@ convertf -p <(printf "genotypename: raw-GWA-data.bed
 snpname: raw-GWA-data.bim
 indivname: raw-GWA-data.fam
 outputformat: EIGENSTRAT
-genotypeoutname: raw-GWA-data_pop_strat.eigenstratgeno
-snpoutname: raw-GWA-data_pop_strat.snp
-indivoutname: raw-GWA-data_pop_strat.ind")
+genotypeoutname: raw-GWA-data.eigenstratgeno
+snpoutname: raw-GWA-data.snp
+indivoutname: raw-GWA-data.ind")
 ```
 
 ####B. Run SmartPCA to check population stratification by principal component analysis
 
 ```
 smartpca.perl \
--i raw-GWA-data_pop_strat.eigenstratgeno \
--a raw-GWA-data_pop_strat.snp \
--b raw-GWA-data_pop_strat.ind \
+-i raw-GWA-data.eigenstratgeno \
+-a raw-GWA-data.snp \
+-b raw-GWA-data.ind \
 -o raw-GWA-data_pop_strat.pca \
 -p raw-GWA-data_pop_strat.plot \
 -e raw-GWA-data_pop_strat.eval \
@@ -150,116 +159,135 @@ plotpig \
 ####D. Check STATISTICAL SIGNFICANCE of each principal component by twstats
 
 ```
-> twstats \
+twstats \
 -t twtable \
 -i raw-GWA-data_pop_strat.eval \
 -o GWA-data_pop_strat_twout
 ```
 
- Corrected only PCs with P values <0.05 
+ Check P vaule of each PC in file "GWA-data_pop_strat_twout", corrected only PCs with P values <0.05. 
 
 ####E. smarteigenstrat.perl: run EIGENSTRAT stratification correction.
 
- **Optional** Run evec2pca function to tranfer *.evec* file to *.pca* (if .pca file was not generated in smartpca process)
+**Optional** Run evec2pca function to tranfer *.evec* file to *.pca* (if .pca file was not generated in smartpca process)
 
- ```
- evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data_pop_strat.ind raw-GWA-data_pop_strat.pca
- ```
+```
+evec2pca.perl 100 raw-GWA-data_pop_strat.pca.evec raw-GWA-data.ind raw-GWA-data_pop_strat.pca
+```
 
- Then run smarteigenstrat program:
+Then run smarteigenstrat program:
 
 ``` 
 smarteigenstrat.perl \
--i raw-GWA-data_pop_strat.eigenstratgeno \
--a raw-GWA-data_pop_strat.snp \
--b raw-GWA-data_pop_strat.ind \
+-i raw-GWA-data.eigenstratgeno \
+-a raw-GWA-data.snp \
+-b raw-GWA-data.ind \
 -q NO \
 -p raw-GWA-data_pop_strat.pca.evec \
 -k 10 \
 -o raw-GWA-data_pop_strat_cor.chisq \
 -l raw-GWA-data_pop_strat_cor.log
 ```
-   
+
 
 
 ####F. gc.perl: apply Genomic Control to the association statistics computed by EIGENSTRAT
 
 ```
- gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
+gc.perl raw-GWA-data_pop_strat_cor.chisq raw-GWA-data_pop_strat_cor_report
 ```
 
- Check the lamda value before and after correction, then change QC number for correction to adjust.
+Check the lamda value before and after correction in output report file, then change QC number for correction to adjust if necessary.
 
 ####G. Remove outliers
 
- only apply to large datasets, for small dataset we go step 5 to remove possible outliers
+only apply to large datasets, for small dataset we go step 5 to remove possible outliers
  
- Rerun smartpca function
+Rerun smartpca function
  
  
 ###5. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
  
- ####A. excluding from the GWA data those SNPs that do not feature in the genotype data of the four original HapMap3 populations
- ```
- plink --bfile raw-GWA-data --extract hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt --make-bed --out raw-GWA-data.hapmap-snps
-. 
- ```
- ####B. Merge data with HapMap3 population
- ```
- plink \
- --bfile raw-GWA-data.hapmap-snps \
- --bmerge hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bed hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bim hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.fam \
- --extract raw-GWA-data.prune.in \
- --make-bed \
- --out raw-GWA-data.hapmap3r2.pruned
- ```
- ####C. Rerun smarpca
+####A. excluding from the GWA data those SNPs that do not feature in the genotype data of the four original HapMap3 populations
+
+```
+plink \
+--bfile raw-GWA-data \
+--extract hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt \
+--make-bed \
+--out raw-GWA-data.hapmap-snps
+```
  
- ```
- convertf -p <(printf "genotypename: raw-GWA-data.hapmap3r2.pruned.bed
- snpname: raw-GWA-data.hapmap3r2.pruned.bim
- indivname: raw-GWA-data.hapmap3r2.pruned.fam
- outputformat: EIGENSTRAT
- genotypeoutname: raw-GWA-data.hapmap3r2.pruned.eigenstratgeno
- snpoutname: raw-GWA-data.hapmap3r2.pruned.snp
- indivoutname: raw-GWA-data.hapmap3r2.pruned.ind")
- ```
- Followed by:
- ```
- smartpca.perl \
- -i raw-GWA-data.hapmap3r2.pruned.eigenstratgeno \
- -a raw-GWA-data.hapmap3r2.pruned.snp \
- -b raw-GWA-data.hapmap3r2.pruned.ind \
- -o raw-GWA-data.hapmap3r2.pruned.pca \
- -p raw-GWA-data.hapmap3r2.pruned.plot \
- -e raw-GWA-data.hapmap3r2.pruned.eval \
- -l raw-GWA-data.hapmap3r2.pruned.log \
- -m 0 \
- -t 100 \
- -k 100 \
- -s 6
- ```
- Then check **raw-GWA-data.hapmap3r2.pruned.plot.pca** to decide whether to remove outliers or not.  
+ 
+####B. Merge data with HapMap3 population
+
+```
+plink \
+--bfile raw-GWA-data.hapmap-snps \
+--bmerge hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bed hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.bim hapmap3r2_CEU.CHB.JPT.YRI.founders.no-at-cg-snps.fam \
+--extract raw-GWA-data.prune.in \
+--make-bed \
+--out raw-GWA-data.hapmap3r2.pruned
+```
+
+
+
+####C. Rerun smarpca
+ 
+```
+convertf -p <(printf "genotypename: raw-GWA-data.hapmap3r2.pruned.bed
+snpname: raw-GWA-data.hapmap3r2.pruned.bim
+indivname: raw-GWA-data.hapmap3r2.pruned.fam
+outputformat: EIGENSTRAT
+genotypeoutname: raw-GWA-data.hapmap3r2.pruned.eigenstratgeno
+snpoutname: raw-GWA-data.hapmap3r2.pruned.snp
+indivoutname: raw-GWA-data.hapmap3r2.pruned.ind")
+
+```
+
+Followed by:
+
+```
+smartpca.perl \
+-i raw-GWA-data.hapmap3r2.pruned.eigenstratgeno \
+-a raw-GWA-data.hapmap3r2.pruned.snp \
+-b raw-GWA-data.hapmap3r2.pruned.ind \
+-o raw-GWA-data.hapmap3r2.pruned.pca \
+-p raw-GWA-data.hapmap3r2.pruned.plot \
+-e raw-GWA-data.hapmap3r2.pruned.eval \
+-l raw-GWA-data.hapmap3r2.pruned.log \
+-m 0 \
+-t 100 \
+-k 100 \
+-s 6
+
+```
+
+Then check **raw-GWA-data.hapmap3r2.pruned.plot.pca** to decide whether to remove outliers or not.  
  
  
 ###6. Removal of all individuals failing sample QC
 
 In shell, type:
->cat fail-* | sort -k1 | uniq > fail-qc-inds.txt
+```
+cat fail-* | sort -k1 | uniq > fail-qc-inds.txt
+```
 
 The file **fail-qc-inds.txt** should now contain a list of unique individuals failing the previous QC steps. 
 
 To remove them from the data set, type the following command at the shell prompt:
 
->plink --bfile raw-GWA-data --remove fail-qc-inds.txt --make-bed --out clean-inds-GWA-data
-
+```
+plink --bfile raw-GWA-data --remove fail-qc-inds.txt --make-bed --out GWA-data-ind-clean
+```
 
 ##PART B: SNP QC
 
-1. Identification of all SNPs with an excessive missing data rate
+###1. Identification of all SNPs with an excessive missing data rate
 
+```
 plink --bfile clean-inds-GWA-data --missing --out clean-inds-GWA-data
-
+```
 
 Then to plott a histogram of the missing genotype rate 
 
