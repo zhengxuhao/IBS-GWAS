@@ -172,7 +172,7 @@ smartpca.perl \
 
 Then check **raw-GWA-data.Hapmap.merged.plot.pdf** to decide whether to remove outliers or not, create **"fail-outliers-QC.txt"**.   
  
-###5. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
+###5. Population stratification by principal component analysis
 
 [Please find details here.](https://github.com/Wall-Facer/IBS-GWAS/blob/master/PCA_4_pop_stratification.md)
 
