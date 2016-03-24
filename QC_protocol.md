@@ -174,7 +174,7 @@ Then check **raw-GWA-data.Hapmap.merged.plot.pdf** to decide whether to remove o
  
 ###5. Population stratification by principal component analysis in EIGENSOFT 6.0.1 package
 
-
+[Please find details here.](https://github.com/Wall-Facer/IBS-GWAS/blob/master/PCA_4_pop_stratification.md)
 
 ###6. Removal of all individuals failing sample QC
 
@@ -201,32 +201,39 @@ plink --bfile clean-inds-GWA-data --missing --out clean-inds-GWA-data
 
 Then to plott a histogram of the missing genotype rate 
 
-In R environment,  run Rscript “lmiss-hist.R”.
+In R environment,  run Rscript **“lmiss-hist.R”**.
 
-This will create the graph “clean-inds-GWA-data.lmiss.pdf”.  Examine the plot to decide a reasonable threshold at which to exclude SNPs based on elevated missing data.  
+This will create the graph **“clean-inds-GWA-data.lmiss.pdf”**.  
 
-In general, we set 0.05 for this value.
-2. Test SNPs for different genotype call rates between cases and controls
+Examine the plot to decide a reasonable threshold at which to exclude SNPs based on elevated missing data.  
+
+In general, we set **0.05** for this value.
+
+
+###2. Test SNPs for different genotype call rates between cases and controls
 
 In shell, type
-
+```
 plink --bfile clean-inds-GWA-data --test-missing --out clean-inds-GWA-data
+```
 
-To highlight all SNPs with significant differences in case and control call rates (p<10-5), we run the following script:  
+To highlight all SNPs with significant differences in case and control call rates (**p<10-5**), we run the following script:  
 
-In shell, type:
-
+```
 perl run-diffmiss-qc.pl clean-inds-GWA-data
+```
 
-The command creates a file called “fail-diffmiss-qc.txt”, which can be used to exclude these SNPs from downstream association analyses.
+The command creates a file called **“fail-diffmiss-qc.txt”**, which can be used to exclude these SNPs from downstream association analyses.
 
-3.  MAF <0.01
-4.  HWE<10-7
-5. Removal of all SNPs failing QC
+###3.  MAF <0.01
+
+###4.  HWE<10-7 (only within controls)
+
+###5. Removal of all SNPs failing QC
 
 In shell, type:
-
+```
 plink --bfile clean-inds-GWA-data --exclude fail-diffmiss-qc.txt --geno 0.05 –maf 0.01 --hwe 0.0000001 --make-bed --out clean-GWA-data
-
+```
 
 Then we will get the clean data after QC for downstream imputation or association analyses: “clean-GWA-data.bed”, “clean-GWA-data.bim” and “clean-GWA-data.fam”. 
