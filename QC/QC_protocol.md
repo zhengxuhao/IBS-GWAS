@@ -15,7 +15,7 @@ Plink binary format (BED, BIM & FAM)
 
 ##Tool used in this protocol:
 
-Computer workstation with Unix or Linux operating system
+
  
   * Computer workstation with Unix or Linux operating system
   
@@ -39,7 +39,7 @@ grep PROBLEM raw-GWA-data.sexcheck > raw-GWA-data.sexprobs
 awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-sexcheck-qc.txt
 ```
  
- File “fail-sexcheck-qc.txt” contains family IDs and individual IDs of all these individuals to remove.    
+ File **“fail-sexcheck-qc.txt”** contains family IDs and individual IDs of all these individuals to remove.    
 
 
 ###2. Identification of individuals with elevated missing data rates or outlying heterozygosity rate
@@ -54,7 +54,7 @@ awk '{$1=$1 "\t";$2= $2 "\t"; print}' raw-GWA-data.sexprobs |cut -f1-2 > fail-se
 plink --bfile raw-GWA-data --missing --out raw-GWA-data 
 plink --bfile raw-GWA-data --het --out raw-GWA-data 
 ```
- Then run rscript “QC_imiss_het.R” in R environment
+ Then run rscript **“QC_imiss_het.R”** in R environment
 
  A graph **raw-GWA-data.imiss-vs-het.pdf** will be generated for checking missing calling rates and heterozygosity rate of all individuals.  
  
@@ -97,7 +97,7 @@ plink \
 perl run-IBD-QC.pl raw-GWA-data
 
 ```
- A file **fail-IBD-QC.txt** will be generated to exclude these samples from downstream analyses.
+ A file **“fail-IBD-QC.txt”** will be generated to exclude these samples from downstream analyses.
 
  
 ###4. Plot individuals on components drawn from the HapMap reference populations to assess likely ancestry groupings.
@@ -183,7 +183,7 @@ In shell, type:
 cat fail-* | sort -k1 | uniq > fail-qc-inds.txt
 ```
 
-The file **fail-qc-inds.txt** should now contain a list of unique individuals failing the previous QC steps. 
+The file **“fail-qc-inds.txt”** should now contain a list of unique individuals failing the previous QC steps. 
 
 To remove them from the data set, type the following command at the shell prompt:
 
