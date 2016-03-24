@@ -5,7 +5,7 @@ GWAS on multinational IBS case-control cohorts, about creating standardized prot
 
 ##QUALITY CONTROL (QC) PROTOCOL FOR IBS GWAS DATA 
 
-[Protocol here](https://github.com/Wall-Facer/IBS-GWAS/blob/master/QC_protocol.md)
+[Protocol here](https://github.com/Wall-Facer/IBS-GWAS/blob/master/QC/QC_protocol.md)
 
 ##Reference 
 
