@@ -104,7 +104,7 @@ perl run-IBD-QC.pl raw-GWA-data
 
 Required: 
  
-* HapMap reference population (hapmap3CEU.CHB.JPT.YRI.b37) has already been transformed to Hg19 build, including CEU CHB JPT YRI populations.  [script here](https://github.com/Wall-Facer/IBS-GWAS/blob/master/Build_HapMapb37_ref).
+* HapMap reference population (hapmap3CEU.CHB.JPT.YRI.b37) has already been transformed to Hg19 build, including CEU CHB JPT YRI populations.  [script here](https://github.com/Wall-Facer/IBS-GWAS/blob/master/QC/Build_HapMapb37_ref).
 * hapmap3r2_CEU.CHB.JPT.YRI.no-at-cg-snps.txt (list of all HapMap3 markers without a/t & c/g markers)
 * smarpca, convertf functions in EIGENSOFT 6.0.1 package
  
@@ -174,7 +174,7 @@ Then check **raw-GWA-data.Hapmap.merged.plot.pdf** to decide whether to remove o
  
 ###5. Population stratification by principal component analysis
 
-[Please find details here.](https://github.com/Wall-Facer/IBS-GWAS/blob/master/PCA_4_pop_stratification.md)
+[Please find details here.](https://github.com/Wall-Facer/IBS-GWAS/blob/master/QC/PCA_4_pop_stratification.md)
 
 ###6. Removal of all individuals failing sample QC
 
