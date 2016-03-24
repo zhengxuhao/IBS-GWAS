@@ -188,7 +188,11 @@ The file **fail-qc-inds.txt** should now contain a list of unique individuals fa
 To remove them from the data set, type the following command at the shell prompt:
 
 ```
-plink --bfile raw-GWA-data --remove fail-qc-inds.txt --make-bed --out GWA-data-ind-clean
+plink \
+--bfile raw-GWA-data \
+--remove fail-qc-inds.txt \
+--make-bed \
+--out GWA-data-ind-clean
 ```
 
 ##PART B: SNP QC
@@ -196,7 +200,10 @@ plink --bfile raw-GWA-data --remove fail-qc-inds.txt --make-bed --out GWA-data-i
 ###1. Identification of all SNPs with an excessive missing data rate
 
 ```
-plink --bfile clean-inds-GWA-data --missing --out clean-inds-GWA-data
+plink \
+--bfile clean-inds-GWA-data \
+--missing \
+--out clean-inds-GWA-data
 ```
 
 Then to plott a histogram of the missing genotype rate 
@@ -214,7 +221,10 @@ In general, we set **0.05** for this value.
 
 In shell, type
 ```
-plink --bfile clean-inds-GWA-data --test-missing --out clean-inds-GWA-data
+plink \
+--bfile clean-inds-GWA-data \
+--test-missing \
+--out clean-inds-GWA-data
 ```
 
 To highlight all SNPs with significant differences in case and control call rates (**p<10-5**), we run the following script:  
@@ -233,7 +243,14 @@ The command creates a file called **“fail-diffmiss-qc.txt”**, which can be u
 
 In shell, type:
 ```
-plink --bfile clean-inds-GWA-data --exclude fail-diffmiss-qc.txt --geno 0.05 –maf 0.01 --hwe 0.0000001 --make-bed --out clean-GWA-data
+plink \
+--bfile clean-inds-GWA-data \
+--exclude fail-diffmiss-qc.txt \
+--geno 0.05 \
+–-maf 0.01 \
+--hwe 0.0000001 \
+--make-bed \
+--out clean-GWA-data
 ```
 
 Then we will get the clean data after QC for downstream imputation or association analyses: “clean-GWA-data.bed”, “clean-GWA-data.bim” and “clean-GWA-data.fam”. 
