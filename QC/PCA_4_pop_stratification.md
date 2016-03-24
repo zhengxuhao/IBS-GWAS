@@ -94,6 +94,28 @@ Check the lamda value before and after correction in output report file, then ch
 
 ###G. Remove outliers
 
-only apply to large datasets, for small dataset we go step 4 to remove possible outliers
+Only apply to **large datasets**, for small dataset we go step 4 to remove possible outliers.
  
-Re-run smartpca function
+Re-run smartpca function, *-m* defines maximum number of outlier removal iterations, *-t* define number of principal components along which to remove outliers, *-s* number of standard deviations which an individual must exceed, along one of topk top principal components, in order to be removed as an outlier.
+
+```
+smartpca.perl \
+-i raw-GWA-data.eigenstratgeno \
+-a raw-GWA-data.snp \
+-b raw-GWA-data.ind \
+-o raw-GWA-data_pop_strat.pca \
+-p raw-GWA-data_pop_strat.plot \
+-e raw-GWA-data_pop_strat.eval \
+-l raw-GWA-data_pop_strat.log \
+-m 10 \
+-t 10 \
+-k 10 \
+-s 6
+
+```
+
+A file names **"raw-GWA-data_pop_strat.outliers"** will be generated, which contain FID and IID for all individuals to remove.  Rename is to **"fail--pop-strat-qc.txt"**.
+
+
+
+####Note: After remove all individual, it is recommended to *re-run step A-F* on *clean-inds-GWA-data* to decide how many QCs will be included in final analysis.  
