@@ -170,7 +170,7 @@ smartpca.perl \
 
 ```
 
-Then check **raw-GWA-data.Hapmap.merged.plot.pdf** to decide whether to remove outliers or not, create **"fail-outliers-QC.txt"**.   
+Then check **raw-GWA-data.Hapmap.merged.plot.pdf** ([an example here](https://github.com/Wall-Facer/IBS-GWAS/blob/master/QC/ITA_HapMap_merged_corrected.plot.pdf))to decide whether to remove outliers or not, create **"fail-outliers-QC.txt"**.   
  
 ###5. Population stratification by principal component analysis
 
